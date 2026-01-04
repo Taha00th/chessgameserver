@@ -154,7 +154,7 @@ function initializeBoard() {
   return board;
 }
 
-// Basit hamle geçerliliği kontrolü
+// Satranç kuralları - Gerçek hamle kontrolü
 function isValidMove(board, from, to, currentTurn) {
   const piece = board[from.row][from.col];
   if (!piece || piece.color !== currentTurn) return false;
@@ -162,7 +162,97 @@ function isValidMove(board, from, to, currentTurn) {
   const targetPiece = board[to.row][to.col];
   if (targetPiece && targetPiece.color === currentTurn) return false;
   
-  // Basit kontroller (gerçek satranç kuralları için genişletilebilir)
+  const rowDiff = Math.abs(to.row - from.row);
+  const colDiff = Math.abs(to.col - from.col);
+  
+  switch (piece.type) {
+      case 'pawn':
+          return isValidPawnMove(board, from, to, piece.color);
+      case 'rook':
+          return isValidRookMove(board, from, to);
+      case 'knight':
+          return isValidKnightMove(from, to);
+      case 'bishop':
+          return isValidBishopMove(board, from, to);
+      case 'queen':
+          return isValidQueenMove(board, from, to);
+      case 'king':
+          return isValidKingMove(from, to);
+      default:
+          return false;
+  }
+}
+
+// Piyon hareketi
+function isValidPawnMove(board, from, to, color) {
+  const direction = color === 'white' ? -1 : 1;
+  const startRow = color === 'white' ? 6 : 1;
+  const rowDiff = to.row - from.row;
+  const colDiff = Math.abs(to.col - from.col);
+  
+  // İleri hareket
+  if (colDiff === 0) {
+      if (board[to.row][to.col]) return false; // Önünde taş var
+      
+      if (rowDiff === direction) return true; // Bir kare ileri
+      if (from.row === startRow && rowDiff === 2 * direction) return true; // İlk hamle 2 kare
+  }
+  
+  // Çapraz alma
+  if (colDiff === 1 && rowDiff === direction) {
+      return board[to.row][to.col] && board[to.row][to.col].color !== color;
+  }
+  
+  return false;
+}
+
+// Kale hareketi (düz çizgi)
+function isValidRookMove(board, from, to) {
+  if (from.row !== to.row && from.col !== to.col) return false;
+  return isPathClear(board, from, to);
+}
+
+// At hareketi (L şekli)
+function isValidKnightMove(from, to) {
+  const rowDiff = Math.abs(to.row - from.row);
+  const colDiff = Math.abs(to.col - from.col);
+  return (rowDiff === 2 && colDiff === 1) || (rowDiff === 1 && colDiff === 2);
+}
+
+// Fil hareketi (çapraz)
+function isValidBishopMove(board, from, to) {
+  const rowDiff = Math.abs(to.row - from.row);
+  const colDiff = Math.abs(to.col - from.col);
+  if (rowDiff !== colDiff) return false;
+  return isPathClear(board, from, to);
+}
+
+// Vezir hareketi (kale + fil)
+function isValidQueenMove(board, from, to) {
+  return isValidRookMove(board, from, to) || isValidBishopMove(board, from, to);
+}
+
+// Şah hareketi (bir kare her yöne)
+function isValidKingMove(from, to) {
+  const rowDiff = Math.abs(to.row - from.row);
+  const colDiff = Math.abs(to.col - from.col);
+  return rowDiff <= 1 && colDiff <= 1;
+}
+
+// Yol temiz mi kontrol et
+function isPathClear(board, from, to) {
+  const rowStep = to.row > from.row ? 1 : to.row < from.row ? -1 : 0;
+  const colStep = to.col > from.col ? 1 : to.col < from.col ? -1 : 0;
+  
+  let currentRow = from.row + rowStep;
+  let currentCol = from.col + colStep;
+  
+  while (currentRow !== to.row || currentCol !== to.col) {
+      if (board[currentRow][currentCol]) return false;
+      currentRow += rowStep;
+      currentCol += colStep;
+  }
+  
   return true;
 }
 
