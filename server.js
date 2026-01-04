@@ -29,19 +29,21 @@ const io = socketIo(server, {
   pingInterval: 25000
 });
 
-// Static dosyalar
-app.use(express.static('public'));
+// API endpoint - Frontend Vercel'de olduğu için sadece JSON response
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Chess Game Backend Server', 
+    status: 'running',
+    endpoints: {
+      socket: '/socket.io/',
+      health: '/'
+    }
+  });
+});
 
 // Oyun durumu
 const games = new Map();
 const waitingPlayers = [];
-
-// Ana sayfa
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Socket bağlantıları
 io.on('connection', (socket) => {
   console.log('Oyuncu bağlandı:', socket.id);
 
